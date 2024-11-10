@@ -1,0 +1,37 @@
+{
+    "name": "aesis-dev/yii2-user",
+    "description": "Flexible  registration and authentication module for Yii2",
+    "keywords": ["yii2", "yii2-user",
+        " management"
+    ],
+    "type": "yii2-extension",
+    "license": "MIT",
+    "support": {
+        "source": "https://gitlab.com/aesis_dev/yii2-user"
+    },
+    "minimum-stability": "dev",
+    "require": {
+        "php": ">=8.0.0",
+        "yiisoft/yii2": "~2.0.14",
+        "yiisoft/yii2-swiftmailer": "^2.0.0",
+        "yiisoft/yii2-authclient": "^2.1.0",
+        "yiisoft/yii2-bootstrap5": "^2.0"
+    },
+    "require-dev": {
+        "yiisoft/yii2-codeception": "^2.0.0",
+        "codeception/specify": "^0.4.3",
+        "codeception/verify": "^0.3.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "aesis\\user\\": ""
+        }
+    },
+    "extra": {
+        "bootstrap": "aesis\\user\\Bootstrap",
+        "branch-alias": {
+            "dev-master": "0.9.x-dev",
+            "dev-develop": "1.0.x-dev"
+        }
+    }
+}
