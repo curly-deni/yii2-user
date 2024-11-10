@@ -1,10 +1,10 @@
 {
-    "name": "aesis-dev/yii2-user",
+    "name": "aesis_dev/yii2-user",
     "description": "Flexible  registration and authentication module for Yii2",
     "keywords": ["yii2", "yii2-user",
         " management"
     ],
-    "type": "yii2-extension",
+    "type": "library",
     "license": "MIT",
     "support": {
         "source": "https://gitlab.com/aesis_dev/yii2-user"
