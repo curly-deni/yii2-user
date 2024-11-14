@@ -18,6 +18,7 @@ use yii\db\StaleObjectException;
  * @property string $key
  * @property boolean $by_creds
  * @property string|null $name
+ * @property int $last_usage_at
  *
  * @property User $user
  */
@@ -37,9 +38,9 @@ class ApiKey extends AbstractKeyProvider
     {
         return [
             [['user_id', 'key', 'by_creds'], 'required'],
-            [['user_id'], 'default', 'value' => null],
+            [['user_id', 'last_usage_at'], 'default', 'value' => null],
             [['by_creds'], 'default', 'value' => false],
-            [['user_id'], 'integer'],
+            [['user_id', 'last_usage_at'], 'integer'],
             [['key', 'name'], 'string', 'max' => 255],
             [['key'], 'unique'],
             [['by_creds'], 'boolean'],
@@ -58,6 +59,7 @@ class ApiKey extends AbstractKeyProvider
             'key' => 'Key',
             'by_creds' => 'By Credentials',
             'name' => 'Name',
+            'last_usage_at' => 'Last Usage At',
         ];
     }
 
@@ -83,6 +85,11 @@ class ApiKey extends AbstractKeyProvider
     {
         $user = static::findOne(['key' => $key]);
 
+        if (!is_null($user)) {
+            $user->last_usage_at = time();
+            $user->save();
+        }
+
         return is_null($user) ? $user : $user->user;
     }
 
@@ -98,6 +105,8 @@ class ApiKey extends AbstractKeyProvider
         $model->user_id = $user_id;
         $model->key = $key;
         $model->by_creds = $by_creds;
+        $model->last_usage_at = time();
+
         if (empty($name))
             $model->name = DeviceDetector::getDeviceInfo();
         $model->save();

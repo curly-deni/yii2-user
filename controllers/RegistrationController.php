@@ -37,6 +37,7 @@ class RegistrationController extends Controller
                 'user-confirm' => ['get'],
                 'email-confirm' => ['get'],
                 'resend' => ['post'],
+                'is-confirmed' => ['get'],
                 'check-username' => ['get'],
                 'check-email' => ['get'],
                 'registration-enabled' => ['get'],
@@ -176,6 +177,12 @@ class RegistrationController extends Controller
         ]);
     }
 
+    public function actionIsConfirmed($email)
+    {
+        $user = $this->finder->findUserByEmail($email);
+        return $this->makeResponse(['confirmed' => $user instanceof User && $user->isConfirmed]);
+    }
+
     /**
      * @throws InvalidConfigException
      */
@@ -201,9 +208,14 @@ class RegistrationController extends Controller
             );
         }
 
+        $errors = implode(". ", array_map(function ($error) {
+            return implode(", ", $error);
+        }, $model->getErrors()));
+
         return $this->makeResponse(
             '',
-            Yii::t('user', 'An error occurred. Please try again later.'),
+            Yii::t('user', 'An error occurred. Please try again later.')
+            . (empty($errors) ? "" : " ") . $errors,
             500
         );
     }

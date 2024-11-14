@@ -20,6 +20,8 @@ class RecoveryForm extends Model
 
     public $password;
 
+    public $signoutAll;
+
     protected $mailer;
 
     protected $finder;
@@ -49,7 +51,7 @@ class RecoveryForm extends Model
     {
         return [
             self::SCENARIO_REQUEST => ['email'],
-            self::SCENARIO_RESET => ['password'],
+            self::SCENARIO_RESET => ['password', 'signoutAll'],
         ];
     }
 
@@ -110,6 +112,10 @@ class RecoveryForm extends Model
         }
 
         if ($token->user->resetPassword($this->password)) {
+            if ($this->signoutAll)
+            {
+                $token->user->removeAllKeys();
+            }
             $token->delete();
             return true;
         } else {

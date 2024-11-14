@@ -77,14 +77,15 @@ class Bootstrap implements BootstrapInterface
 
                 $app->params['location'] = Location::getLocationRequest();
 
-                Yii::$container->setSingleton('yii\web\User', aesis\user\helpers\User::class);
-
-                Yii::$container->set('yii\web\User', [
-                    'enableSession' => InternalChecker::isInternalApi(),
-                    'enableAutoLogin' => true,
-                    'loginUrl' => ['/api/user/signin'],
-                    'identityClass' => $module->modelMap['User'],
-                ]);
+                Yii::$container->set('yii\web\User',
+                    [
+                        'class' => 'aesis\user\helpers\User',
+                        'enableSession' => InternalChecker::isInternalApi(),
+                        'enableAutoLogin' => true,
+                        'loginUrl' => ['/api/user/signin'],
+                        'identityClass' => $module->modelMap['User']
+                    ]
+                );
 
                 $configUrlRule = [
                     'prefix' => $module->urlPrefix,

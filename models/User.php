@@ -95,20 +95,28 @@ class User extends ActiveRecord implements IdentityInterface
         return $this->getAttribute('id');
     }
 
-    public function getAuthKey()
+    public function getAuthKey($session=false)
     {
         if (InternalChecker::isInternalApi()) {
-            return $this->module->modelMap['AuthKey']::getNewKey($this->getId());
+            return $this->module->modelMap['AuthKey']::getNewKey($this->getId(), $session);
         }
         return $this->module->modelMap['ApiKey']::getNewKey($this->getId(), true);
+    }
+
+    public static function removeCurrentKey()
+    {
+        $model = AuthKey::getCurrentKey();
+        if ($model)
+            return $model->delete();
+        return true;
     }
 
     public function getCurrentKey()
     {
         if (InternalChecker::isInternalApi()) {
-            return AuthKey::getCurrentKey();
+            return $this->module->modelMap['AuthKey']::getCurrentKey();
         }
-        return ApiKey::getCurrentKey();
+        return $this->module->modelMap['ApiKey']::getCurrentKey();
     }
 
     /**
@@ -193,7 +201,7 @@ class User extends ActiveRecord implements IdentityInterface
 
     public function validateAuthKey($authKey)
     {
-        return $this->module->modelMap['AuthKey']::validateKey($this->getId(), $authKey);
+        return $this->module->modelMap['AuthKey']::validateKey($this->getId(), $authKey, InternalChecker::isIgnoreUserAgent());
     }
 
     /**
@@ -458,17 +466,39 @@ class User extends ActiveRecord implements IdentityInterface
 
     public function getApiKeys()
     {
-        return $this->hasMany(ApiKey::class, ['user_id' => 'id']);
+        return $this->hasMany($this->module->modelMap['ApiKey'], ['user_id' => 'id']);
+    }
+
+    public function getApiKeysByCreds()
+    {
+        return $this->hasMany($this->module->modelMap['ApiKey'], ['user_id' => 'id', 'by_creds' => true]);
     }
 
     public function getAuthKeys()
     {
-        return $this->hasMany($this->module->modelMap['AuthKey']::class, ['user_id' => 'id']);
+        return $this->hasMany($this->module->modelMap['AuthKey'], ['user_id' => 'id']);
+    }
+
+    public function removeAllKeys()
+    {
+        foreach ($this->getApiKeysByCreds()->all() as $key) {
+            $key->delete();
+        }
+
+        foreach ($this->getAuthKeys()->all() as $key) {
+            $key->delete();
+        }
     }
 
     public function getTokens()
     {
         return $this->hasMany(Token::class, ['user_id' => 'id']);
+    }
+
+    public function getIsAdmin()
+    {
+        return in_array($this->username, $this->module->admins)
+            || in_array($this->email, $this->module->admins);
     }
 
 }

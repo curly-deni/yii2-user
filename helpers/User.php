@@ -2,6 +2,7 @@
 
 namespace aesis\user\helpers;
 
+use aesis\user\models\AuthKey;
 use Yii;
 use yii\base\InvalidConfigException;
 use Yii\web\Cookie;
@@ -9,6 +10,7 @@ use yii\web\User as BaseUser;
 
 class User extends BaseUser
 {
+
     /**
      * @throws InvalidConfigException
      */
@@ -30,6 +32,15 @@ class User extends BaseUser
         Yii::$app->getResponse()->getCookies()->add($cookie);
     }
 
+    protected function removeIdentityCookie($removeKey = false)
+    {
+        if ($removeKey) {
+            $this->identityClass::removeCurrentKey();
+        }
+        parent::removeIdentityCookie();
+    }
+
+
     /**
      * @throws InvalidConfigException
      */
@@ -41,8 +52,10 @@ class User extends BaseUser
             return;
         }
 
+        Yii::debug('duration '. $duration);
+
         if ($this->enableAutoLogin && ($this->autoRenewCookie || $identity === null)) {
-            $this->removeIdentityCookie();
+            $this->removeIdentityCookie(true);
         }
 
         $session = Yii::$app->getSession();
@@ -52,7 +65,8 @@ class User extends BaseUser
         $session->remove($this->authKeyParam);
 
         if ($identity) {
-            $key = $identity->getAuthKey();
+            Yii::debug("is session " . ($duration <= 0 ? "true" : "false"));
+            $key = $identity->getAuthKey($duration <= 0);
 
             $session->set($this->idParam, $identity->getId());
             $session->set($this->authKeyParam, $key);

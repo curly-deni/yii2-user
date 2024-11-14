@@ -13,7 +13,6 @@ use yii\db\ActiveRecord;
  * @property int $user_id
  * @property string|null $name
  * @property string|null $surname
- * @property string|null $nickname
  * @property string|null $bio
  * @property string|null $birthday
  *
@@ -43,8 +42,7 @@ class Profile extends ActiveRecord
             [['user_id'], 'integer'],
             [['bio'], 'string'],
             [['birthday'], 'safe'],
-            [['name', 'surname', 'nickname'], 'string', 'max' => 255],
-            [['nickname'], 'unique'],
+            [['name', 'surname'], 'string', 'max' => 255],
             [['user_id'], 'unique'],
             [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['user_id' => 'id']],
         ];
@@ -57,7 +55,6 @@ class Profile extends ActiveRecord
             'user_id' => 'User ID',
             'name' => 'Name',
             'surname' => 'Surname',
-            'nickname' => 'Nickname',
             'bio' => 'Bio',
             'birthday' => 'Birthday',
         ];

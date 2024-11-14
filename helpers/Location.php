@@ -3,18 +3,47 @@
 namespace aesis\user\helpers;
 
 use Yii;
+use IP2LocationYii\IP2Location_Yii;
 
 class Location
 {
 
+    public static $record = null;
+
+    public static function setup() {
+
+        if (!self::$record)
+            return;
+
+        define('IP2LOCATION_DATABASE', '/app/lib/location_db.bin');
+        define('IP2LOCATION_LANGUAGE', \Yii::$app->language);
+
+        $realIP = Yii::$app->request->headers->get('X-Real-IP');
+        if (!$realIP)
+            $realIP = Yii::$app->request->remoteIP;
+
+        $IP2Location = new IP2Location_Yii();
+
+        self::$record = $IP2Location->get($realIP);
+    }
+
     public static function getLocationRequest()
     {
-        $ip = $_SERVER['REMOTE_ADDR'];
-        $details = json_decode(file_get_contents("http://ipinfo.io/$ip/json"), true);
+        self::setup();
+        if (YII_ENV_DEV) {
+            return "Local country";
+        }
+        return self::$record['country'];
+    }
 
-        if (isset($details['bogon']))
-            return "localhost";
-        return $details['country'];
+    public static function getCityRequest()
+    {
+        self::setup();
+
+        if (YII_ENV_DEV) {
+            return "Local city";
+        }
+        return self::$record['city'];
     }
 
     public static function getLocation()

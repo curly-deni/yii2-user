@@ -8,12 +8,12 @@ use Yii;
 use yii\filters\AccessControl;
 use yii\filters\auth\HttpBearerAuth;
 use yii\web\ForbiddenHttpException;
-use yii\web\IdentityInterface;
 use yii\web\Response;
 
 trait ApiTrait
 {
 //    var $allRoutesNeedAuth = true;
+//    var $useAccessControl = true;
 
     public function behaviors(): array
     {
@@ -33,34 +33,29 @@ trait ApiTrait
             ]
         ];
 
+        if ($this->useAccessControl ?? true) {
+            $behaviors['access'] = [
+                'class' => AccessControl::class,
+                'rules' => [],
+                'denyCallback' => function ($rule, $action) {
+                    throw new ForbiddenHttpException($action->uniqueId);
+                },
+            ];
+        }
 
-        $behaviors['access'] = [
-            'class' => AccessControl::class,
-            'rules' => [],
-            'denyCallback' => function ($rule, $action) {
-                throw new ForbiddenHttpException($action->uniqueId);
-            },
-        ];
 
-        if ($this->allRoutesNeedAuth ?? true) {
+        if (($this->allRoutesNeedAuth ?? true) && ($this->useAccessControl ?? true)) {
             $behaviors['access']['rules'][] = [
                 'allow' => true,
                 'actions' => [],
                 'roles' => ['@'],
             ];
         }
-//        else {
-//            $behaviors['access']['rules'][] = [
-//                'allow' => true,
-//                'actions' => [],
-//                'roles' => ['?'],
-//            ];
-//        }
 
         return $behaviors;
     }
 
-    public IdentityInterface $user;
+    public $user;
 
     /**
      * @throws Throwable

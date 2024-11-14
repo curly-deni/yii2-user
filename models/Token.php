@@ -38,9 +38,9 @@ class Token extends ActiveRecord
     public function getUrl()
     {
         $route = match ($this->type) {
-            self::TYPE_CONFIRMATION => '/api/user/user-confirm',
-            self::TYPE_RECOVERY => '/api/user/recover-password',
-            self::TYPE_CONFIRM_NEW_EMAIL, self::TYPE_CONFIRM_OLD_EMAIL => '/api/user/email-confirm',
+            self::TYPE_CONFIRMATION => '/api/auth/user-confirm',
+            self::TYPE_RECOVERY => '/auth/recover',
+            self::TYPE_CONFIRM_NEW_EMAIL, self::TYPE_CONFIRM_OLD_EMAIL => '/api/auth/email-confirm',
             default => throw new RuntimeException(),
         };
 

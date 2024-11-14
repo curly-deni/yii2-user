@@ -84,12 +84,12 @@ class Module extends BaseModule
     public array $urlRules = [
         '<action:(signin|signout)>' => 'guard/<action>',
 
-        '<action:(check-username|check-email|registration-enabled|signup|user-confirm-resend|user-confirm|email-confirm)>' => 'registration/<action>',
+        '<action:(check-username|check-email|registration-enabled|signup|resend|is-confirmed|user-confirm|email-confirm)>' => 'registration/<action>',
 
         'edit/<action>' => 'settings/<action>',
 
         'forgot-password' => 'recovery/request',
-        'recover-password/<id:\d+>/<code:[A-Za-z0-9_-]+>' => 'recovery/reset',
+        'recover-password' => 'recovery/reset',
 
     ];
 

@@ -76,7 +76,6 @@ class m241101_141824_init extends Migration
             'user_id' => $this->bigInteger()->unsigned()->notNull(),
             'name' => $this->string(),
             'surname' => $this->string(),
-            'nickname' => $this->string(),
             'bio' => $this->text(),
             'birthday' => $this->date(),
         ]);

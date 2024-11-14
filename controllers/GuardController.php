@@ -7,6 +7,7 @@ use aesis\user\models\LoginForm;
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\filters\VerbFilter;
+use function Aws\describe_type;
 
 class GuardController extends BaseController
 {
@@ -26,7 +27,7 @@ class GuardController extends BaseController
             'class' => VerbFilter::class,
             'actions' => [
                 'signin' => ['post'],
-                'signout' => ['post'],
+                'signout' => ['get'],
             ],
         ];
 
@@ -45,7 +46,6 @@ class GuardController extends BaseController
         $model->login = $login;
         $model->password = $password;
         $model->rememberMe = $rememberMe;
-
         if ($model->login()) {
 
             $data = [];

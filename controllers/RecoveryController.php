@@ -105,7 +105,7 @@ class RecoveryController extends Controller
         ]);
 
         $data = Yii::$app->getRequest()->post();
-        $model->password = $data['password'] ?? '';
+        $model->load($data, '');
 
         if (empty($model->password)) {
             return $this->makeResponse(
