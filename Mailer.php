@@ -34,6 +34,8 @@ class Mailer extends Component
     /** @var string */
     protected $recoverySubject;
 
+    protected $deleteSubject;
+
     /** @var Module */
     protected $module;
 
@@ -129,12 +131,29 @@ class Mailer extends Component
         return $this->recoverySubject;
     }
 
+    public function getDeleteSubject()
+    {
+        if ($this->deleteSubject == null) {
+            $this->setDeleteSubject(Yii::t('user', 'Complete account delete on {0}', Yii::$app->name));
+        }
+
+        return $this->deleteSubject;
+    }
+
     /**
      * @param string $recoverySubject
      */
     public function setRecoverySubject($recoverySubject)
     {
         $this->recoverySubject = $recoverySubject;
+    }
+
+    /**
+     * @param string $deleteSubject
+     */
+    public function setDeleteSubject($deleteSubject)
+    {
+        $this->deleteSubject = $deleteSubject;
     }
 
     /** @inheritdoc */
@@ -211,6 +230,19 @@ class Mailer extends Component
             $user->email,
             $this->getRecoverySubject(),
             'recovery',
+            ['user' => $user, 'token' => $token]
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException
+     */
+    public function sendDeleteMessage($user, $token)
+    {
+        return $this->sendMessage(
+            $user->email,
+            $this->getDeleteSubject(),
+            'delete',
             ['user' => $user, 'token' => $token]
         );
     }

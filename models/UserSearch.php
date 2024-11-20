@@ -3,12 +3,15 @@
 namespace aesis\user\models;
 
 use aesis\user\Finder;
+use aesis\user\traits\ModuleTrait;
 use Yii;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
 
 class UserSearch extends Model
 {
+    use ModuleTrait;
+
     public $id;
 
     public $username;

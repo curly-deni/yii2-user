@@ -2,9 +2,11 @@
 
 namespace aesis\user\traits;
 
+use aesis\user\filters\AccessRule;
 use aesis\user\helpers\InternalChecker;
 use Throwable;
 use Yii;
+use aesis\user\filters;
 use yii\filters\AccessControl;
 use yii\filters\auth\HttpBearerAuth;
 use yii\web\ForbiddenHttpException;
@@ -12,6 +14,9 @@ use yii\web\Response;
 
 trait ApiTrait
 {
+
+    use hasResponseTrait;
+
 //    var $allRoutesNeedAuth = true;
 //    var $useAccessControl = true;
 
@@ -36,7 +41,9 @@ trait ApiTrait
         if ($this->useAccessControl ?? true) {
             $behaviors['access'] = [
                 'class' => AccessControl::class,
-                'rules' => [],
+                'rules' => [
+//                    'class' => AccessRule::class
+                ],
                 'denyCallback' => function ($rule, $action) {
                     throw new ForbiddenHttpException($action->uniqueId);
                 },

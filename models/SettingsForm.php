@@ -137,9 +137,9 @@ class SettingsForm extends Model
         $this->user->unconfirmed_email = $this->email;
         /** @var Token $token */
         $token = Yii::createObject([
-            'class' => Token::class,
+            'class' => $this->module->modelMap['Token'],
             'user_id' => $this->user->id,
-            'type' => Token::TYPE_CONFIRM_NEW_EMAIL,
+            'type' => $this->module->modelMap['Token']::TYPE_CONFIRM_NEW_EMAIL,
         ]);
         $token->save(false);
         $this->mailer->sendReconfirmationMessage($this->user, $token);
@@ -156,9 +156,9 @@ class SettingsForm extends Model
         $this->defaultEmailChange();
         /** @var Token $token */
         $token = Yii::createObject([
-            'class' => Token::class,
+            'class' => $this->module->modelMap['Token'],
             'user_id' => $this->user->id,
-            'type' => Token::TYPE_CONFIRM_OLD_EMAIL,
+            'type' => $this->module->modelMap['Token']::TYPE_CONFIRM_OLD_EMAIL,
         ]);
         $token->save(false);
         $this->mailer->sendReconfirmationMessage($this->user, $token);

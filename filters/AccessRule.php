@@ -22,7 +22,10 @@ class AccessRule extends BaseAccessRule
                 if (!Yii::$app->user->isGuest) {
                     return true;
                 }
-            } elseif ($user->can($role)) {
+            } elseif (!Yii::$app->user->isGuest && Yii::$app->user->identity->canAccessViaRole($role)) {
+                return true;
+            }
+            elseif ($user->can($role)) {
                 return true;
             }
         }

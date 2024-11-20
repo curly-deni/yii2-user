@@ -20,7 +20,7 @@ class RecoveryForm extends Model
 
     public $password;
 
-    public $signoutAll;
+    public $signOutAll;
 
     protected $mailer;
 
@@ -51,7 +51,7 @@ class RecoveryForm extends Model
     {
         return [
             self::SCENARIO_REQUEST => ['email'],
-            self::SCENARIO_RESET => ['password', 'signoutAll'],
+            self::SCENARIO_RESET => ['password', 'signOutAll'],
         ];
     }
 
@@ -61,11 +61,17 @@ class RecoveryForm extends Model
     public function rules(): array
     {
         return [
+            // email rules
             'emailTrim' => ['email', 'trim'],
             'emailRequired' => ['email', 'required'],
             'emailPattern' => ['email', 'email'],
+
+            // password rules
             'passwordRequired' => ['password', 'required'],
             'passwordLength' => ['password', 'string', 'max' => 72, 'min' => 6],
+
+            // flags rules
+            'signOutAllRule' => ['signOutAll', 'boolean']
         ];
     }
 
@@ -84,9 +90,9 @@ class RecoveryForm extends Model
         if ($user instanceof User) {
             /** @var Token $token */
             $token = Yii::createObject([
-                'class' => Token::class,
+                'class' => $this->module->modelMap['Token'],
                 'user_id' => $user->id,
-                'type' => Token::TYPE_RECOVERY,
+                'type' => $this->module->modelMap['Token']::TYPE_RECOVERY,
             ]);
 
             if (!$token->save(false)) {
@@ -111,11 +117,7 @@ class RecoveryForm extends Model
             return false;
         }
 
-        if ($token->user->resetPassword($this->password)) {
-            if ($this->signoutAll)
-            {
-                $token->user->removeAllKeys();
-            }
+        if ($token->user->resetPassword($this->password, $this->signOutAll)) {
             $token->delete();
             return true;
         } else {

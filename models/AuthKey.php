@@ -49,14 +49,31 @@ class AuthKey extends ActiveRecord
 
     public function attributeLabels()
     {
-        return [
+
+        $attr = [
             'id' => 'ID',
             'user_id' => 'User ID',
             'key' => 'Key',
             'device_info' => 'Device Info',
-            'location' => 'Location',
             'last_login_at' => 'Last Login At',
         ];
+
+        if ($this->module->useLocation) {
+            $attr['location'] = 'Location';
+        }
+
+        return $attr;
+    }
+
+    public function fields()
+    {
+        $fields = parent::fields();
+
+        if (!$this->module->useLocation) {
+            unset($fields['location']);
+        }
+
+        return $fields;
     }
 
     public function getUser()
@@ -113,24 +130,31 @@ class AuthKey extends ActiveRecord
     public static function getNewKey($user_id, $session)
     {
         $key = Yii::$app->security->generateRandomString();
-        $model = new static();
+        $model = new self();
         $model->user_id = $user_id;
         $model->key = $key;
         $model->last_login_at = time();
-        $model->location = Location::getLocation();
+
         $model->device_info = DeviceDetector::getDeviceInfo();
 
         $model->is_session = $session;
-        // если сессионная, то через сутки удалить
-        // также надо удалять просроченные
+        // TODO если сессионная, то через сутки удалить
+
+        if ($model->module->useLocation) {
+            $model->location = Location::getLocation();
+        } else {
+            $model->location = 'unused';
+        }
 
         if ($model->save()) {
-            \Yii::debug('save key ' . $key . " ". $user_id . $session);
+            return $key;
         }
-        else {
-            \Yii::debug($model->getErrors());
-        }
-        return $key;
+
+        $errors = implode(". ", array_map(function ($error) {
+            return implode(", ", $error);
+        }, $model->getErrors()));
+
+        throw new \yii\httpclient\Exception($errors);
     }
 
     /**
@@ -142,8 +166,11 @@ class AuthKey extends ActiveRecord
         $query = [
             'user_id' => intval($user_id),
             'key' => $key,
-            'location' => Location::getLocation()
         ];
+
+        if (self::getModuleStatic()->useLocation) {
+            $query['location'] = Location::getLocation();
+        }
 
         if (!$ignoreDeviceInfo) {
             $query['device_info'] = DeviceDetector::getDeviceInfo();

@@ -29,7 +29,6 @@ class Location
 
     public static function getLocationRequest()
     {
-        self::setup();
         if (YII_ENV_DEV) {
             return "Local country";
         }
@@ -38,8 +37,6 @@ class Location
 
     public static function getCityRequest()
     {
-        self::setup();
-
         if (YII_ENV_DEV) {
             return "Local city";
         }

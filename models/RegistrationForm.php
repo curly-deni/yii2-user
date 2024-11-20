@@ -84,7 +84,7 @@ class RegistrationForm extends Model
         }
 
         /** @var User $user */
-        $user = Yii::createObject(User::class);
+        $user = Yii::createObject($this->module->modelMap['User']);
         $user->setScenario('register');
         $this->loadAttributes($user);
 

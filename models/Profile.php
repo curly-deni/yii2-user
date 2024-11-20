@@ -10,7 +10,6 @@ use yii\db\ActiveRecord;
  * This is the model class for table "profile".
  *
  * @property int $id
- * @property int $user_id
  * @property string|null $name
  * @property string|null $surname
  * @property string|null $bio
@@ -24,11 +23,6 @@ class Profile extends ActiveRecord
 
     protected $module;
 
-    public function init(): void
-    {
-        $this->module = Yii::$app->getModule('user');
-    }
-
     public static function tableName()
     {
         return 'profile';
@@ -37,22 +31,30 @@ class Profile extends ActiveRecord
     public function rules()
     {
         return [
-            [['user_id'], 'required'],
-            [['user_id'], 'default', 'value' => null],
-            [['user_id'], 'integer'],
+            [['id'], 'required'],
+            [['id'], 'integer'],
+            [['id'], 'unique'], // Уникальность id
             [['bio'], 'string'],
             [['birthday'], 'safe'],
             [['name', 'surname'], 'string', 'max' => 255],
-            [['user_id'], 'unique'],
-            [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['user_id' => 'id']],
+            [['id'], 'exist', 'skipOnError' => true, 'targetClass' => $this->module->modelMap['User'], 'targetAttribute' => ['id' => 'id']],
         ];
     }
+
+    public function fields()
+    {
+        $fields = parent::fields();
+        $fields['username'] = function () {
+            return $this->user->username ?? null;
+        };
+        return $fields;
+    }
+
 
     public function attributeLabels()
     {
         return [
             'id' => 'ID',
-            'user_id' => 'User ID',
             'name' => 'Name',
             'surname' => 'Surname',
             'bio' => 'Bio',
@@ -62,7 +64,7 @@ class Profile extends ActiveRecord
 
     public function getUser()
     {
-        return $this->hasOne($this->module->modelMap['User'], ['id' => 'user_id']);
+        return $this->hasOne($this->module->modelMap['User'], ['id' => 'id']);
     }
 
 }

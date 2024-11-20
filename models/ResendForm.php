@@ -68,9 +68,9 @@ class ResendForm extends Model
         if ($user instanceof User && !$user->isConfirmed) {
             /** @var Token $token */
             $token = Yii::createObject([
-                'class' => Token::class,
+                'class' => $this->module->modelMap['Token'],
                 'user_id' => $user->id,
-                'type' => Token::TYPE_CONFIRMATION,
+                'type' => $this->module->modelMap['Token']::TYPE_CONFIRMATION,
             ]);
             $token->save(false);
             $this->mailer->sendConfirmationMessage($user, $token);

@@ -8,8 +8,6 @@ use yii\base\Module as BaseModule;
 
 class Module extends BaseModule
 {
-    const VERSION = '1.0.0';
-
     /** Email is changed right after user enter's new email address. */
     const STRATEGY_INSECURE = 0;
 
@@ -22,9 +20,6 @@ class Module extends BaseModule
     /** @var bool Whether to enable registration. */
     public bool $enableRegistration = true;
 
-    /** @var bool Whether to remove password field from registration form. */
-    public bool $enableGeneratingPassword = false;
-
     /** @var bool Whether user has to confirm his account. */
     public bool $enableConfirmation = true;
 
@@ -34,7 +29,7 @@ class Module extends BaseModule
     /** @var bool Whether to enable password recovery. */
     public bool $enablePasswordRecovery = true;
 
-    /** @var bool Whether user can remove his account */
+    /** TODO @var bool Whether user can remove his account */
     public bool $enableAccountDelete = false;
 
     /** @var int Email changing strategy. */
@@ -49,14 +44,11 @@ class Module extends BaseModule
     /** @var int The time before a recovery token becomes invalid. */
     public int $recoverWithin = 21600; // 6 hours
 
+    /** @var int The time before a deletion token becomes invalid. */
+    public int $deleteWithin = 1800; // 30 minutes
+
     /** @var int Cost parameter used by the Blowfish hash algorithm. */
     public int $cost = 10;
-
-    /** @var array An array of administrator's usernames. */
-    public array $admins = [];
-
-    /** @var string The Administrator permission name. */
-    public string $adminPermission;
 
     /** @var array Mailer configuration */
     public array $mailer = [];
@@ -80,6 +72,10 @@ class Module extends BaseModule
     /** @var string The database connection to use for models in this module. */
     public string $dbConnection = 'db';
 
+    public bool $useLocation = false;
+
+    public string $locationDatabase = '/app/lib/location_db.bin';
+
     /** @var array The rules to be used in URL management. */
     public array $urlRules = [
         '<action:(signin|signout)>' => 'guard/<action>',
@@ -91,10 +87,12 @@ class Module extends BaseModule
         'forgot-password' => 'recovery/request',
         'recover-password' => 'recovery/reset',
 
+        'delete-account-request' => 'delete/request',
+        'delete-account' => 'delete/delete'
+
     ];
 
-    public bool $useLocation = false;
-    public string $locationDatabase = '/app/lib/location_db.bin';
+
 
     /**
      * @return string

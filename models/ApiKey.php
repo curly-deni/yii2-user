@@ -44,7 +44,7 @@ class ApiKey extends AbstractKeyProvider
             [['key', 'name'], 'string', 'max' => 255],
             [['key'], 'unique'],
             [['by_creds'], 'boolean'],
-            [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['user_id' => 'id']],
+            [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => $this->module->modelMap['User'], 'targetAttribute' => ['user_id' => 'id']],
         ];
     }
 

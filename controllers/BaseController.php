@@ -16,11 +16,13 @@ abstract class BaseController extends Controller
     public $allRoutesNeedAuth = false;
 
     protected $finder;
+    public $module;
 
     public function __construct($id, $module, Finder $finder, $config = [])
     {
         parent::__construct($id, $module, $config);
         $this->finder = $finder;
+        $this->module = $module;
     }
 
 }

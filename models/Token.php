@@ -29,6 +29,7 @@ class Token extends ActiveRecord
     const TYPE_RECOVERY = 1;
     const TYPE_CONFIRM_NEW_EMAIL = 2;
     const TYPE_CONFIRM_OLD_EMAIL = 3;
+    const TYPE_ACCOUNT_DELETE = 4;
 
     public function getUser()
     {
@@ -37,10 +38,14 @@ class Token extends ActiveRecord
 
     public function getUrl()
     {
+        $prefix = $this->module->urlPrefix;
+        $appPrefix = \Yii::$app->params['urlPrefix'] ?? "/";
+
         $route = match ($this->type) {
-            self::TYPE_CONFIRMATION => '/api/auth/user-confirm',
-            self::TYPE_RECOVERY => '/auth/recover',
-            self::TYPE_CONFIRM_NEW_EMAIL, self::TYPE_CONFIRM_OLD_EMAIL => '/api/auth/email-confirm',
+            self::TYPE_CONFIRMATION => $appPrefix . $prefix . '/user-confirm',
+            self::TYPE_RECOVERY => $appPrefix . $prefix . '/recover',
+            self::TYPE_ACCOUNT_DELETE => $appPrefix . $prefix . '/delete-account',
+            self::TYPE_CONFIRM_NEW_EMAIL, self::TYPE_CONFIRM_OLD_EMAIL => $appPrefix . $prefix . '/email-confirm',
             default => throw new RuntimeException(),
         };
 
@@ -52,6 +57,7 @@ class Token extends ActiveRecord
         $expirationTime = match ($this->type) {
             self::TYPE_CONFIRMATION, self::TYPE_CONFIRM_NEW_EMAIL, self::TYPE_CONFIRM_OLD_EMAIL => $this->module->confirmWithin,
             self::TYPE_RECOVERY => $this->module->recoverWithin,
+            self::TYPE_ACCOUNT_DELETE => $this->module->deleteWithin,
             default => throw new RuntimeException(),
         };
 

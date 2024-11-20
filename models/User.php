@@ -26,6 +26,7 @@ use yii\web\IdentityInterface;
  * @property int $id
  * @property string $username
  * @property string $email
+ * @property string $role
  * @property string|null $unconfirmed_email
  * @property string $password_hash
  * @property int|null $confirmed_at
@@ -43,10 +44,14 @@ class User extends ActiveRecord implements IdentityInterface
 {
     use ModuleTrait;
 
+    const ADMIN_ROLE = "admin";
+    const USER_ROLE = "user";
+
     const OLD_EMAIL_CONFIRMED = 0b1;
     const NEW_EMAIL_CONFIRMED = 0b10;
 
     public $password;
+    public $passwordGenerated = false;
 
     private $_profile;
 
@@ -82,7 +87,7 @@ class User extends ActiveRecord implements IdentityInterface
 
     public function getProfile()
     {
-        return $this->hasOne(Profile::class, ['user_id' => 'id']);
+        return $this->hasOne($this->module->modelMap['Profile'], ['id' => 'id']);
     }
 
     public function setProfile($profile)
@@ -95,7 +100,7 @@ class User extends ActiveRecord implements IdentityInterface
         return $this->getAttribute('id');
     }
 
-    public function getAuthKey($session=false)
+    public function getAuthKey($session = false)
     {
         if (InternalChecker::isInternalApi()) {
             return $this->module->modelMap['AuthKey']::getNewKey($this->getId(), $session);
@@ -105,7 +110,9 @@ class User extends ActiveRecord implements IdentityInterface
 
     public static function removeCurrentKey()
     {
-        $model = AuthKey::getCurrentKey();
+        $authKey = self::getModuleStatic()->modelMap['AuthKey'];
+
+        $model = $authKey::getCurrentKey();
         if ($model)
             return $model->delete();
         return true;
@@ -135,6 +142,7 @@ class User extends ActiveRecord implements IdentityInterface
             'created_at' => 'Created At',
             'updated_at' => 'Updated At',
             'flags' => 'Flags',
+            'role' => 'Role'
         ];
     }
 
@@ -152,7 +160,7 @@ class User extends ActiveRecord implements IdentityInterface
         $scenarios = parent::scenarios();
         return ArrayHelper::merge($scenarios, [
             'register' => ['username', 'email', 'password'],
-            'create' => ['username', 'email', 'password'],
+            'create' => ['username', 'email', 'password', 'role'],
             'update' => ['username', 'email', 'password'],
             'settings' => ['username', 'email', 'password'],
         ]);
@@ -196,6 +204,9 @@ class User extends ActiveRecord implements IdentityInterface
             // password rules
             'passwordRequired' => ['password', 'required', 'on' => ['register']],
             'passwordLength' => ['password', 'string', 'min' => 6, 'max' => 72, 'on' => ['register', 'create']],
+
+            // role rule
+            'roleRequired' => ['role', 'required', 'on' => ['register', 'create', 'update', 'settings']],
         ];
     }
 
@@ -216,7 +227,10 @@ class User extends ActiveRecord implements IdentityInterface
         $transaction = $this->getDb()->beginTransaction();
 
         try {
-            $this->password = ($this->password == null && $this->module->enableGeneratingPassword) ? Password::generate(8) : $this->password;
+            if (empty($this->password)) {
+                $this->password = Password::generate(12);
+                $this->passwordGenerated = true;
+            }
 
             if (!$this->save()) {
                 $transaction->rollBack();
@@ -260,7 +274,7 @@ class User extends ActiveRecord implements IdentityInterface
 
             if ($this->module->enableConfirmation) {
                 /** @var Token $token */
-                $token = Yii::createObject(['class' => Token::class, 'type' => Token::TYPE_CONFIRMATION]);
+                $token = Yii::createObject(['class' => $this->module->modelMap['Token'], 'type' => $this->module->modelMap['Token']::TYPE_CONFIRMATION]);
                 $token->link('user', $this);
             }
 
@@ -312,7 +326,7 @@ class User extends ActiveRecord implements IdentityInterface
         $token = $this->finder->findToken([
             'user_id' => $this->id,
             'code' => $code,
-        ])->andWhere(['in', 'type', [Token::TYPE_CONFIRM_NEW_EMAIL, Token::TYPE_CONFIRM_OLD_EMAIL]])->one();
+        ])->andWhere(['in', 'type', [$this->module->modelMap['Token']::TYPE_CONFIRM_NEW_EMAIL, $this->module->modelMap['Token']::TYPE_CONFIRM_OLD_EMAIL]])->one();
 
         if (empty($this->unconfirmed_email) || $token === null || $token->isExpired) {
             return [
@@ -334,12 +348,12 @@ class User extends ActiveRecord implements IdentityInterface
 
                 if ($this->module->emailChangeStrategy == Module::STRATEGY_SECURE) {
                     switch ($token->type) {
-                        case Token::TYPE_CONFIRM_NEW_EMAIL:
+                        case $this->module->modelMap['Token']::TYPE_CONFIRM_NEW_EMAIL:
                             $this->flags |= self::NEW_EMAIL_CONFIRMED;
                             $status = true;
                             $message = Yii::t('user', 'Awesome, almost there. Now you need to click the confirmation link sent to your old email address');
                             break;
-                        case Token::TYPE_CONFIRM_OLD_EMAIL:
+                        case $this->module->modelMap['Token']::TYPE_CONFIRM_OLD_EMAIL:
                             $this->flags |= self::OLD_EMAIL_CONFIRMED;
                             $status = true;
                             $message = Yii::t('user', 'Awesome, almost there. Now you need to click the confirmation link sent to your new email address');
@@ -370,9 +384,13 @@ class User extends ActiveRecord implements IdentityInterface
     /**
      * @throws \yii\base\Exception
      */
-    public function resetPassword($password)
+    public function resetPassword($password, $signOutAll = false)
     {
-        return (bool)$this->updateAttributes(['password_hash' => Password::hash($password)]);
+        $result = (bool)$this->updateAttributes(['password_hash' => Password::hash($password)]);
+        if ($result && $signOutAll) {
+            $this->removeAllKeys();
+        }
+        return $result;
     }
 
 
@@ -418,6 +436,19 @@ class User extends ActiveRecord implements IdentityInterface
         return $this->username;
     }
 
+    public function beforeValidate()
+    {
+        if (empty($this->username)) {
+            $this->generateUsername();
+        }
+
+        if (empty($this->role)) {
+            $this->role = self::USER_ROLE;
+        }
+
+        return parent::beforeValidate();
+    }
+
     /** @inheritdoc
      * @throws \yii\base\Exception
      */
@@ -440,7 +471,10 @@ class User extends ActiveRecord implements IdentityInterface
         if ($insert) {
             if (!isset($this->_profile)) {
                 /** @var Profile $this ->_profile */
-                $this->_profile = Yii::createObject(Profile::class);
+                $this->_profile = Yii::createObject([
+                    'class' => $this->module->modelMap['Profile'],
+                    'id' => $this->id
+                ]);
             }
             $this->_profile->link('user', $this);
         }
@@ -461,7 +495,9 @@ class User extends ActiveRecord implements IdentityInterface
 
     public static function findIdentityByAccessToken($token, $type = null)
     {
-        return ApiKey::findIdentity($token);
+        $key = self::getModuleStatic()->modelMap['ApiKey'];
+
+        return $key::findIdentity($token);
     }
 
     public function getApiKeys()
@@ -481,24 +517,26 @@ class User extends ActiveRecord implements IdentityInterface
 
     public function removeAllKeys()
     {
-        foreach ($this->getApiKeysByCreds()->all() as $key) {
-            $key->delete();
-        }
+        $this->module->modelMap['ApiKey']::deleteAll([
+            'by_creds' => true,
+            'user_id' => $this->id
+        ]);
 
-        foreach ($this->getAuthKeys()->all() as $key) {
-            $key->delete();
-        }
+        $this->module->modelMap['AuthKey']::deleteAll(['user_id' => $this->id]);
     }
 
     public function getTokens()
     {
-        return $this->hasMany(Token::class, ['user_id' => 'id']);
+        return $this->hasMany($this->module->modelMap['Token'], ['user_id' => 'id']);
     }
 
     public function getIsAdmin()
     {
-        return in_array($this->username, $this->module->admins)
-            || in_array($this->email, $this->module->admins);
+        return $this->role === self::ADMIN_ROLE;
     }
 
+    public function canAccessViaRole($role): bool
+    {
+        return $this->role === $role;
+    }
 }

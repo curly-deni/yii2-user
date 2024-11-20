@@ -31,7 +31,7 @@ class Bootstrap implements BootstrapInterface
         'LoginForm' => 'aesis\user\models\LoginForm',
         'SettingsForm' => 'aesis\user\models\SettingsForm',
         'RecoveryForm' => 'aesis\user\models\RecoveryForm',
-        'UserSearch' => 'aesis\user\models\UserSearch',
+        'DeleteForm' => 'aesis\user\models\DeleteForm'
     ];
 
     /**
@@ -78,28 +78,24 @@ class Bootstrap implements BootstrapInterface
 
                 if ($module->useLocation) {
                     Location::setup($module->locationDatabase);
-                    Yii::$container->set('LocationModule', [
-                        'class' => Location::class
-                    ]);
-                } else {
-                    Yii::$container->set('LocationModule', [
-                        'class' => LocationEmu::class
-                    ]);
+                    $app->params['location'] = Location::class::getLocationRequest();
                 }
-                $app->params['location'] = Yii::$container->get('LocationModule')::getLocationRequest();
+
+                $appUrlPrefix = $app->params['urlPrefix'] ?? '/';
+                $moduleUrlPrefix = $module->urlPrefix;
 
                 Yii::$container->set('yii\web\User',
                     [
                         'class' => 'aesis\user\helpers\User',
                         'enableSession' => InternalChecker::isInternalApi(),
                         'enableAutoLogin' => true,
-                        'loginUrl' => ['/api/user/signin'],
+                        'loginUrl' => [$appUrlPrefix . $moduleUrlPrefix . '/signin'],
                         'identityClass' => $module->modelMap['User']
                     ]
                 );
 
                 $configUrlRule = [
-                    'prefix' => $module->urlPrefix,
+                    'prefix' => $moduleUrlPrefix,
                     'rules' => $module->urlRules,
                 ];
 

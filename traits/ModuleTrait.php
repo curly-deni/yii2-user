@@ -6,9 +6,14 @@ use Yii;
 
 trait ModuleTrait
 {
-    public function getModule()
+    public static function getModuleStatic()
     {
         return Yii::$app->getModule('user');
+    }
+
+    public function getModule()
+    {
+        return self::getModuleStatic();
     }
 
     public static function getDb()
