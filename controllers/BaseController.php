@@ -3,14 +3,12 @@
 namespace aesis\user\controllers;
 
 use aesis\user\Finder;
-use aesis\user\traits\ApiTrait;
-use aesis\user\traits\hasResponseTrait;
+use aesis\traits\ApiTrait;
 use yii\rest\Controller;
 
 abstract class BaseController extends Controller
 {
 
-    use hasResponseTrait;
     use ApiTrait;
 
     public $allRoutesNeedAuth = false;

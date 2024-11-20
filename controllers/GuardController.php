@@ -2,12 +2,11 @@
 
 namespace aesis\user\controllers;
 
-use aesis\user\helpers\InternalChecker;
+use aesis\traits\helpers\InternalChecker;
 use aesis\user\models\LoginForm;
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\filters\VerbFilter;
-use function Aws\describe_type;
 
 class GuardController extends BaseController
 {

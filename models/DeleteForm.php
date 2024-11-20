@@ -4,6 +4,7 @@ namespace aesis\user\models;
 
 use aesis\user\Finder;
 use aesis\user\Mailer;
+use aesis\user\traits\ModuleTrait;
 use Throwable;
 use Yii;
 use yii\base\InvalidConfigException;
@@ -13,6 +14,8 @@ use yii\db\StaleObjectException;
 
 class DeleteForm extends Model
 {
+    use ModuleTrait;
+
     protected $mailer;
 
     public function __construct(Mailer $mailer, Finder $finder, $config = [])

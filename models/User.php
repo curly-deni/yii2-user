@@ -3,7 +3,7 @@
 namespace aesis\user\models;
 
 use aesis\user\Finder;
-use aesis\user\helpers\InternalChecker;
+use aesis\traits\helpers\InternalChecker;
 use aesis\user\helpers\Password;
 use aesis\user\Mailer;
 use aesis\user\Module;

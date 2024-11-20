@@ -2,9 +2,8 @@
 
 namespace aesis\user;
 
-use aesis\user\helpers\InternalChecker;
+use aesis\traits\helpers\InternalChecker;
 use aesis\user\helpers\Location;
-use aesis\user\helpers\LocationEmu;
 use DeviceDetector\ClientHints;
 use DeviceDetector\DeviceDetector;
 use DeviceDetector\Parser\AbstractParser;

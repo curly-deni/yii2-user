@@ -19,7 +19,7 @@ class DeleteController extends Controller
         $behaviors = parent::behaviors();
 
         $behaviors['access']['only'][] = 'request';
-        $behaviors['access']['rules'][] = ['allow' => true, 'actions' => ['request'], 'roles' => ['@']];
+        $behaviors['access']['rules'][] = ['allow' => true, 'actions' => ['request'], 'roles' => ['admin']];
 
         $behaviors['verbs'] = [
             'class' => VerbFilter::class,
@@ -90,7 +90,7 @@ class DeleteController extends Controller
         }
 
         $model = Yii::createObject([
-            'class' => DeleteForm::class,
+            'class' => $this->module->modelMap['DeleteForm'],
         ]);
 
         $data = Yii::$app->getRequest()->post();
