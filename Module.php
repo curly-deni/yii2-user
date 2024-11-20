@@ -93,6 +93,9 @@ class Module extends BaseModule
 
     ];
 
+    public bool $useLocation = false;
+    public string $locationDatabase = '/app/lib/location_db.bin';
+
     /**
      * @return string
      * @throws InvalidConfigException

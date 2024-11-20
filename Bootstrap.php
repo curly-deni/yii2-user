@@ -4,6 +4,7 @@ namespace aesis\user;
 
 use aesis\user\helpers\InternalChecker;
 use aesis\user\helpers\Location;
+use aesis\user\helpers\LocationEmu;
 use DeviceDetector\ClientHints;
 use DeviceDetector\DeviceDetector;
 use DeviceDetector\Parser\AbstractParser;
@@ -75,7 +76,17 @@ class Bootstrap implements BootstrapInterface
 
                 $app->set('dd', $dd);
 
-                $app->params['location'] = Location::getLocationRequest();
+                if ($module->useLocation) {
+                    Location::setup($module->locationDatabase);
+                    Yii::$container->set('LocationModule', [
+                        'class' => Location::class
+                    ]);
+                } else {
+                    Yii::$container->set('LocationModule', [
+                        'class' => LocationEmu::class
+                    ]);
+                }
+                $app->params['location'] = Yii::$container->get('LocationModule')::getLocationRequest();
 
                 Yii::$container->set('yii\web\User',
                     [

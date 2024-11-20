@@ -10,12 +10,12 @@ class Location
 
     public static $record = null;
 
-    public static function setup() {
+    public static function setup($databasePath) {
 
         if (!self::$record)
             return;
 
-        define('IP2LOCATION_DATABASE', '/app/lib/location_db.bin');
+        define('IP2LOCATION_DATABASE', $databasePath);
         define('IP2LOCATION_LANGUAGE', \Yii::$app->language);
 
         $realIP = Yii::$app->request->headers->get('X-Real-IP');
