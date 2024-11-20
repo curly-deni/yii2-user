@@ -7,6 +7,7 @@ use aesis\user\models\RegistrationForm;
 use aesis\user\models\ResendForm;
 use aesis\user\models\User;
 use aesis\user\Module;
+use aesis\user\traits\ModuleTrait;
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\filters\VerbFilter;
@@ -14,6 +15,17 @@ use yii\filters\VerbFilter;
 
 class RegistrationController extends Controller
 {
+    use ModuleTrait;
+
+    const EVENT_BEFORE_SIGNUP = 'beforeSignup';
+    const EVENT_AFTER_SIGNUP = 'afterSignup';
+    const EVENT_BEFORE_USER_CONFIRM = 'beforeUserConfirm';
+    const EVENT_AFTER_USER_CONFIRM = 'afterUserConfirm';
+    const EVENT_BEFORE_EMAIL_CONFIRM = 'beforeEmailConfirm';
+    const EVENT_AFTER_EMAIL_CONFIRM = 'afterEmailConfirm';
+    const EVENT_BEFORE_RESEND = 'beforeResend';
+    const EVENT_AFTER_RESEND = 'afterResend';
+
     /**
      * @inheritdoc
      */
@@ -118,7 +130,9 @@ class RegistrationController extends Controller
             ];
         }
 
-        $model = Yii::createObject(RegistrationForm::class);
+        $model = Yii::createObject($this->module->modelMap['RegistrationForm']);
+
+        $this->trigger(self::EVENT_BEFORE_SIGNUP);
 
         $model->username = $username;
         $model->password = $password;
@@ -135,6 +149,9 @@ class RegistrationController extends Controller
                 ];
 
             }
+
+            $this->trigger(self::EVENT_AFTER_SIGNUP);
+
             return [
                 'data' => array_merge($loginResult['data'], [
                     'authorized' => true,
@@ -168,7 +185,13 @@ class RegistrationController extends Controller
             ]);
         }
 
+        $this->trigger(self::EVENT_BEFORE_USER_CONFIRM);
+
         $result = $user->attemptConfirmation($code);
+
+        if ($result['success']) {
+            $this->trigger(self::EVENT_AFTER_USER_CONFIRM);
+        }
 
         return $this->redirect([
             '/auth/confirm',
@@ -198,10 +221,13 @@ class RegistrationController extends Controller
 
         $model = Yii::createObject(ResendForm::class);
 
+        $this->trigger(self::EVENT_BEFORE_RESEND);
+
         $data = Yii::$app->getRequest()->post();
         $model->email = $data['email'] ?? null;
 
         if ($model->resend()) {
+            $this->trigger(self::EVENT_AFTER_RESEND);
             return $this->makeResponse(
                 '',
                 Yii::t('user', 'A new confirmation link has been sent')
@@ -240,9 +266,12 @@ class RegistrationController extends Controller
             );
         }
 
+        $this->trigger(self::EVENT_BEFORE_EMAIL_CONFIRM);
+
         $result = $user->attemptEmailChange($code);
 
         if ($result['status']) {
+            $this->trigger(self::EVENT_AFTER_EMAIL_CONFIRM);
             return $this->makeResponse(
                 '',
                 Yii::t('user', 'Email has been changed.')

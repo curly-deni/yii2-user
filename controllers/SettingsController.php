@@ -5,6 +5,7 @@ namespace aesis\user\controllers;
 use aesis\user\controllers\BaseController as Controller;
 use aesis\user\models\Profile;
 use aesis\user\models\SettingsForm;
+use aesis\user\traits\ModuleTrait;
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\db\Exception;
@@ -12,6 +13,8 @@ use yii\filters\VerbFilter;
 
 class SettingsController extends Controller
 {
+    use ModuleTrait;
+
     /**
      * @inheritdoc
      */
@@ -45,7 +48,7 @@ class SettingsController extends Controller
         $model = $this->finder->findProfileById(Yii::$app->user->identity->getId());
 
         if ($model == null) {
-            $model = Yii::createObject(Profile::class);
+            $model = Yii::createObject($this->module->modelMap['Profile']::class);
             $model->link('user', Yii::$app->user->identity);
         }
 
@@ -74,7 +77,7 @@ class SettingsController extends Controller
      */
     public function actionUser()
     {
-        $model = Yii::createObject(SettingsForm::class);
+        $model = Yii::createObject($this->module->modelMap['SettingsForm']::class);
 
         if ($model->load(Yii::$app->getRequest()->post(), '') && $model->save()) {
             return $this->makeResponse(

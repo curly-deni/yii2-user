@@ -6,7 +6,10 @@ return [
     'languages' => [
         'ru',
     ],
-    'translator' => 'Yii::t',
+    'translator' => [
+        'Yii::t',
+        '\\Yii::t',
+    ],
     'sort' => false,
     'overwrite' => true,
     'removeUnused' => false,

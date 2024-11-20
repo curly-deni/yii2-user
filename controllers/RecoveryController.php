@@ -3,14 +3,21 @@
 namespace aesis\user\controllers;
 
 use aesis\user\controllers\BaseController as Controller;
-use aesis\user\models\RecoveryForm;
 use aesis\user\models\Token;
+use aesis\user\traits\ModuleTrait;
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\filters\VerbFilter;
 
 class RecoveryController extends Controller
 {
+    use ModuleTrait;
+
+    const EVENT_BEFORE_RECOVERY_REQUEST = 'beforeRecoveryRequest';
+    const EVENT_AFTER_RECOVERY_REQUEST = 'afterRecoveryRequest';
+    const EVENT_BEFORE_RECOVERY_RESET = 'beforeRecoveryReset';
+    const EVENT_AFTER_RECOVERY_RESET = 'afterRecoveryReset';
+
     /**
      * @inheritdoc
      */
@@ -48,8 +55,8 @@ class RecoveryController extends Controller
         }
 
         $model = Yii::createObject([
-            'class' => RecoveryForm::class,
-            'scenario' => RecoveryForm::SCENARIO_REQUEST,
+            'class' => $this->module->modelMap['RecoveryForm'],
+            'scenario' => $this->module->modelMap['RecoveryForm']::SCENARIO_REQUEST,
         ]);
 
         $data = Yii::$app->getRequest()->post();
@@ -63,7 +70,10 @@ class RecoveryController extends Controller
             );
         }
 
+        $this->trigger(self::EVENT_BEFORE_RECOVERY_REQUEST);
+
         if ($model->sendRecoveryMessage()) {
+            $this->trigger(self::EVENT_AFTER_RECOVERY_REQUEST);
             return $this->makeResponse(
                 '',
                 Yii::t('user', 'Recovery message sent')
@@ -90,7 +100,8 @@ class RecoveryController extends Controller
             );
         }
 
-        $token = $this->finder->findToken(['user_id' => $id, 'code' => $code, 'type' => Token::TYPE_RECOVERY])->one();
+        $token = $this->finder->findToken(['user_id' => $id, 'code' => $code, 'type' => $this->module->modelMap['Token']::TYPE_RECOVERY])->one();
+
         if (empty($token) || !$token instanceof Token || $token->isExpired || $token->user === null) {
             return $this->makeResponse(
                 '',
@@ -100,8 +111,8 @@ class RecoveryController extends Controller
         }
 
         $model = Yii::createObject([
-            'class' => RecoveryForm::class,
-            'scenario' => RecoveryForm::SCENARIO_RESET,
+            'class' => $this->module->modelMap['RecoveryForm'],
+            'scenario' => $this->module->modelMap['RecoveryForm']::SCENARIO_RESET,
         ]);
 
         $data = Yii::$app->getRequest()->post();
@@ -115,7 +126,10 @@ class RecoveryController extends Controller
             );
         }
 
+        $this->trigger(self::EVENT_BEFORE_RECOVERY_RESET);
+
         if ($model->resetPassword($token)) {
+            $this->trigger(self::EVENT_AFTER_RECOVERY_RESET);
             return $this->makeResponse(
                 '',
                 Yii::t('user', 'Password has been changed')

@@ -2,8 +2,8 @@
 
 namespace aesis\user\models;
 
-use aesis\user\Finder;
 use aesis\traits\helpers\InternalChecker;
+use aesis\user\Finder;
 use aesis\user\helpers\Password;
 use aesis\user\Mailer;
 use aesis\user\Module;
@@ -43,6 +43,13 @@ use yii\web\IdentityInterface;
 class User extends ActiveRecord implements IdentityInterface
 {
     use ModuleTrait;
+
+    const BEFORE_CREATE = 'beforeCreate';
+    const AFTER_CREATE = 'afterCreate';
+    const BEFORE_REGISTER = 'beforeRegister';
+    const AFTER_REGISTER = 'afterRegister';
+    const BEFORE_CONFIRM = 'beforeConfirm';
+    const AFTER_CONFIRM = 'afterConfirm';
 
     const ADMIN_ROLE = "admin";
     const USER_ROLE = "user";
@@ -232,14 +239,17 @@ class User extends ActiveRecord implements IdentityInterface
                 $this->passwordGenerated = true;
             }
 
+            $this->trigger(self::BEFORE_CREATE);
+
             if (!$this->save()) {
                 $transaction->rollBack();
                 return false;
             }
 
             $this->confirm();
-
             $this->mailer->sendWelcomeMessage($this, null, true);
+
+            $this->trigger(self::AFTER_CREATE);
 
             $transaction->commit();
 
@@ -267,6 +277,8 @@ class User extends ActiveRecord implements IdentityInterface
             $this->confirmed_at = $this->module->enableConfirmation ? null : time();
             $this->password = $this->module->enableGeneratingPassword ? Password::generate(8) : $this->password;
 
+            $this->trigger(self::BEFORE_REGISTER);
+
             if (!$this->save()) {
                 $transaction->rollBack();
                 return false;
@@ -279,6 +291,9 @@ class User extends ActiveRecord implements IdentityInterface
             }
 
             $this->mailer->sendWelcomeMessage($this, $token ?? null);
+
+            $this->trigger(self::AFTER_REGISTER);
+
             $transaction->commit();
 
             return true;
@@ -378,7 +393,10 @@ class User extends ActiveRecord implements IdentityInterface
 
     public function confirm()
     {
-        return (bool)$this->updateAttributes(['confirmed_at' => time()]);
+        $this->trigger(self::BEFORE_CONFIRM);
+        $result = (bool)$this->updateAttributes(['confirmed_at' => time()]);
+        $this->trigger(self::AFTER_CONFIRM);
+        return $result;
     }
 
     /**

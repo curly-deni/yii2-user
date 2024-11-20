@@ -3,14 +3,21 @@
 namespace aesis\user\controllers;
 
 use aesis\user\controllers\BaseController as Controller;
-use aesis\user\models\DeleteForm;
 use aesis\user\models\Token;
+use aesis\user\traits\ModuleTrait;
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\filters\VerbFilter;
 
 class DeleteController extends Controller
 {
+    use ModuleTrait;
+
+    const EVENT_BEFORE_USER_DELETE = 'beforeUserDelete';
+    const EVENT_AFTER_USER_DELETE = 'afterUserDelete';
+    const EVENT_BEFORE_USER_DELETE_REQUEST = 'beforeUserDeleteRequest';
+    const EVENT_AFTER_USER_DELETE_REQUEST = 'afterUserDeleteRequest';
+
     /**
      * @inheritdoc
      */
@@ -47,12 +54,13 @@ class DeleteController extends Controller
         }
 
         $model = Yii::createObject([
-            'class' => DeleteForm::class,
+            'class' => $this->module->modelMap['DeleteForm']::class,
         ]);
 
-
+        $this->trigger(self::EVENT_BEFORE_USER_DELETE_REQUEST);
 
         if ($model->sendDeleteMessage()) {
+            $this->trigger(self::EVENT_AFTER_USER_DELETE_REQUEST);
             return $this->makeResponse(
                 '',
                 Yii::t('user', 'Delete message sent')
@@ -79,7 +87,9 @@ class DeleteController extends Controller
             );
         }
 
-        $token = $this->finder->findToken(['user_id' => $id, 'code' => $code, 'type' => Token::TYPE_ACCOUNT_DELETE])->one();
+        $token = $this->finder->findToken(['user_id' => $id, 'code' => $code, 'type' => $this->module->modelMap['Token']::TYPE_ACCOUNT_DELETE])->one();
+
+        $this->trigger(self::EVENT_BEFORE_USER_DELETE);
 
         if (empty($token) || !$token instanceof Token || $token->isExpired || $token->user === null) {
             return $this->makeResponse(
@@ -97,6 +107,7 @@ class DeleteController extends Controller
         $model->load($data, '');
 
         if ($model->deleteAccount($token)) {
+            $this->trigger(self::EVENT_AFTER_USER_DELETE);
             return $this->makeResponse(
                 '',
                 Yii::t('user', 'Account has been deleted')
