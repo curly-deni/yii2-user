@@ -54,7 +54,7 @@ class DeleteController extends Controller
         }
 
         $model = Yii::createObject([
-            'class' => $this->module->modelMap['DeleteForm']::class,
+            'class' => $this->module->modelMap['DeleteForm'],
         ]);
 
         $this->trigger(self::EVENT_BEFORE_USER_DELETE_REQUEST);

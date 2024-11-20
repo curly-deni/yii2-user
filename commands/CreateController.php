@@ -4,6 +4,7 @@ namespace aesis\user\commands;
 
 use aesis\user\helpers\Password;
 use aesis\user\models\User;
+use aesis\user\traits\ModuleTrait;
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\console\Controller;
@@ -11,6 +12,7 @@ use yii\helpers\BaseConsole;
 
 class CreateController extends Controller
 {
+    use ModuleTrait;
 
     /**
      * @throws InvalidConfigException
@@ -19,12 +21,13 @@ class CreateController extends Controller
     {
 
         $user = Yii::createObject([
-            'class' => User::class,
+            'class' => $this->module->modelMap['User'],
             'scenario' => 'create',
             'email' => $email,
             'role' => $role,
             'username' => $username,
             'password' => $password ?? Password::generate(12),
+            'passwordGenerated' => true
         ]);
 
         if ($user->create()) {

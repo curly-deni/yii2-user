@@ -28,6 +28,12 @@ class Profile extends ActiveRecord
         return 'profile';
     }
 
+    public function init()
+    {
+        parent::init();
+        $this->module = Yii::$app->getModule('user');
+    }
+
     public function rules()
     {
         return [

@@ -47,7 +47,7 @@ class GuardController extends BaseController
     {
 
         /** @var LoginForm $model */
-        $model = Yii::createObject($this->module->modelMap['LoginForm']::class);
+        $model = Yii::createObject($this->module->modelMap['LoginForm']);
         $this->trigger(self::EVENT_BEFORE_SIGNIN);
 
         $model->login = $login;

@@ -48,7 +48,7 @@ class SettingsController extends Controller
         $model = $this->finder->findProfileById(Yii::$app->user->identity->getId());
 
         if ($model == null) {
-            $model = Yii::createObject($this->module->modelMap['Profile']::class);
+            $model = Yii::createObject($this->module->modelMap['Profile']);
             $model->link('user', Yii::$app->user->identity);
         }
 
@@ -77,7 +77,7 @@ class SettingsController extends Controller
      */
     public function actionUser()
     {
-        $model = Yii::createObject($this->module->modelMap['SettingsForm']::class);
+        $model = Yii::createObject($this->module->modelMap['SettingsForm']);
 
         if ($model->load(Yii::$app->getRequest()->post(), '') && $model->save()) {
             return $this->makeResponse(
