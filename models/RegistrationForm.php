@@ -92,7 +92,7 @@ class RegistrationForm extends Model
             return false;
         }
 
-        return true;
+        return $user;
     }
 
     protected function loadAttributes(User $user)

@@ -74,7 +74,7 @@ class ResendForm extends Model
             ]);
             $token->save(false);
             $this->mailer->sendConfirmationMessage($user, $token);
-            return true;
+            return $token;
         }
         return false;
     }

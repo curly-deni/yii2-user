@@ -4,6 +4,7 @@ namespace aesis\user\controllers;
 
 use aesis\traits\helpers\InternalChecker;
 use aesis\user\models\LoginForm;
+use aesis\user\traits\EventTrait;
 use aesis\user\traits\ModuleTrait;
 use Yii;
 use yii\base\InvalidConfigException;
@@ -12,10 +13,9 @@ use yii\filters\VerbFilter;
 class GuardController extends BaseController
 {
     use ModuleTrait;
+    use EventTrait;
 
-    const EVENT_BEFORE_SIGNIN = 'beforeSignin';
     const EVENT_AFTER_SIGNIN = 'afterSignin';
-    const EVENT_BEFORE_SIGNOUT = 'beforeSignout';
     const EVENT_AFTER_SIGNOUT = 'afterSignout';
 
     /**
@@ -47,14 +47,13 @@ class GuardController extends BaseController
     {
 
         /** @var LoginForm $model */
-        $model = Yii::createObject($this->module->modelMap['LoginForm']);
-        $this->trigger(self::EVENT_BEFORE_SIGNIN);
 
         $model->login = $login;
         $model->password = $password;
         $model->rememberMe = $rememberMe;
         if ($model->login()) {
-            $this->trigger(self::EVENT_AFTER_SIGNIN);
+            $event = $this->getUserEvent(Yii::$app->user->identity);
+            $this->trigger(self::EVENT_AFTER_SIGNIN, $event);
 
             $data = [];
             $data['user'] = Yii::$app->user->identity;
@@ -104,14 +103,17 @@ class GuardController extends BaseController
 
     public function actionSignout()
     {
-        $this->trigger(self::EVENT_BEFORE_SIGNOUT);
+        $user = Yii::$app->user->identity;
+        $event = $this->getUserEvent($user);
+
         $key = Yii::$app->user->identity->getCurrentKey();
         Yii::$app->getUser()->logout();
         $key->processDelete();
-        $this->trigger(self::EVENT_AFTER_SIGNOUT);
+
+        $this->trigger(self::EVENT_AFTER_SIGNOUT, $event);
 
         return $this->makeResponse(
-            [],
+            '',
             Yii::t('user', 'You are logged out.')
         );
     }

@@ -48,9 +48,10 @@ class DeleteForm extends Model
             if (!$this->mailer->sendDeleteMessage($user, $token)) {
                 return false;
             }
+            return $token;
         }
 
-        return true;
+        return false;
     }
 
     /**
@@ -63,7 +64,10 @@ class DeleteForm extends Model
             return false;
         }
 
-        return $token->user->delete();
+        $user = $token->user;
+        if ($token->delete())
+            return $user;
+        return false;
     }
 
     public function formName()

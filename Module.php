@@ -5,6 +5,8 @@ namespace aesis\user;
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\base\Module as BaseModule;
+use yii\web\Cookie;
+use yii\web\Response;
 
 class Module extends BaseModule
 {
@@ -79,20 +81,106 @@ class Module extends BaseModule
     /** @var array The rules to be used in URL management. */
     public array $urlRules = [
         '<action:(signin|signout)>' => 'guard/<action>',
+        'signup/<action:(check-username|check-email|is-enabled|index)>' => 'registration/<action>',
+        'edit/<action:(index|confirm)>' => 'settings/<action>',
+        'delete/<action:(index|confirm)>' => 'delete/<action>',
+        'forgot/password/<action:(index|enter)>' => 'recovery/<action>',
+        'confirm/<action:(index|status|email|resend)>' => 'confirmation/<action>',
 
-        '<action:(check-username|check-email|registration-enabled|signup|resend|is-confirmed|user-confirm|email-confirm)>' => 'registration/<action>',
+        // Узкие правила выше
+        '<action:(index|me|verify-password|get-last-activity-time)' => 'resource/user/<action>',
+        'index/<id:\d+>' => 'resource/user/<action>',
 
-        'edit/<action>' => 'settings/<action>',
-
-        'forgot-password' => 'recovery/request',
-        'recover-password' => 'recovery/reset',
-
-        'delete-account-request' => 'delete/request',
-        'delete-account' => 'delete/delete'
-
+        // Правила для controller/action идут ниже
+        '<controller:[\w\-]+>' => 'resource/<controller>/index',
+        '<controller:[\w\-]+>/<action:[\w\-]+>' => 'resource/<controller>/<action>',
+        '<controller:[\w\-]+>/<action:[\w\-]+>/<id:\d+>' => 'resource/<controller>/<action>',
     ];
 
 
+    public function init()
+    {
+        parent::init();
+
+        Yii::$app->response->on(Response::EVENT_BEFORE_SEND, function ($event) {
+            $request = Yii::$app->request;
+            $response = $event->sender;
+            $cookies = $request->cookies;
+            $responseCookies = $response->cookies;
+
+            // Получаем значение aesis_id из куки
+            $aesisId = $cookies->getValue('aesis_id', null);
+
+            // Проверяем актуальность aesis_id
+            if (!$aesisId || !$this->isAesisIdInvalid($aesisId)) {
+                // Генерируем новое значение aesis_id
+                $newAesisId = $this->generateNewAesisId();
+
+                // Добавляем новое значение в куки
+                $responseCookies->add(new Cookie([
+                    'name' => 'aesis_id',
+                    'value' => $newAesisId,
+                    'httpOnly' => true,
+                ]));
+            }
+        });
+    }
+
+    /**
+     * Проверяет, является ли aesis_id актуальным.
+     *
+     * @param string $aesisId
+     * @return bool
+     */
+    private function isAesisIdInvalid($aesisId)
+    {
+        \Yii::debug('here1');
+
+        if ($aesisId === 'unauthenticated') {
+            return \Yii::$app->getUser()->isGuest;
+        }
+
+        $values = json_decode($aesisId, true);
+        if (\Yii::$app->getUser()->isGuest) {
+            return false;
+        }
+
+        $identity = \Yii::$app->getUser()->getIdentity();
+        $data = [
+            'user' => [
+                'id' => $identity->id,
+                'username' => $identity->username,
+                'email' => $identity->email,
+                'role' => $identity->role
+            ],
+            'profile' => $identity->profile->toArray()
+        ];
+
+        return count(array_udiff_assoc($values, $data, function ($a, $b) { return is_array($a) ? array_diff($a, $b) : strcmp($a, $b); })) !== 0;
+    }
+
+    /**
+     * Генерирует новое значение aesis_id.
+     *
+     * @return string
+     */
+    private function generateNewAesisId()
+    {
+        if (\Yii::$app->getUser()->isGuest) {
+            return 'unauthenticated';
+        }
+        $identity = \Yii::$app->getUser()->getIdentity();
+        $data = [
+            'user' => [
+                'id' => $identity->id,
+                'username' => $identity->username,
+                'email' => $identity->email,
+                'role' => $identity->role
+            ],
+            'profile' => $identity->profile->toArray()
+        ];
+        return json_encode($data);
+    }
 
     /**
      * @return string

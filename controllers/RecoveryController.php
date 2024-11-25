@@ -4,6 +4,7 @@ namespace aesis\user\controllers;
 
 use aesis\user\controllers\BaseController as Controller;
 use aesis\user\models\Token;
+use aesis\user\traits\EventTrait;
 use aesis\user\traits\ModuleTrait;
 use Yii;
 use yii\base\InvalidConfigException;
@@ -12,10 +13,9 @@ use yii\filters\VerbFilter;
 class RecoveryController extends Controller
 {
     use ModuleTrait;
+    use EventTrait;
 
-    const EVENT_BEFORE_RECOVERY_REQUEST = 'beforeRecoveryRequest';
     const EVENT_AFTER_RECOVERY_REQUEST = 'afterRecoveryRequest';
-    const EVENT_BEFORE_RECOVERY_RESET = 'beforeRecoveryReset';
     const EVENT_AFTER_RECOVERY_RESET = 'afterRecoveryReset';
 
     /**
@@ -69,11 +69,11 @@ class RecoveryController extends Controller
                 400
             );
         }
+        $result = $model->sendRecoveryMessage();
 
-        $this->trigger(self::EVENT_BEFORE_RECOVERY_REQUEST);
-
-        if ($model->sendRecoveryMessage()) {
-            $this->trigger(self::EVENT_AFTER_RECOVERY_REQUEST);
+        if ($result) {
+            $event = $this->getTokenEvent($result->user, $result);
+            $this->trigger(self::EVENT_AFTER_RECOVERY_REQUEST, $event);
             return $this->makeResponse(
                 '',
                 Yii::t('user', 'Recovery message sent')
@@ -126,10 +126,9 @@ class RecoveryController extends Controller
             );
         }
 
-        $this->trigger(self::EVENT_BEFORE_RECOVERY_RESET);
-
         if ($model->resetPassword($token)) {
-            $this->trigger(self::EVENT_AFTER_RECOVERY_RESET);
+            $event = $this->getUserEvent($token->user);
+            $this->trigger(self::EVENT_AFTER_RECOVERY_RESET, $event);
             return $this->makeResponse(
                 '',
                 Yii::t('user', 'Password has been changed')

@@ -5,6 +5,7 @@ namespace aesis\user\controllers;
 use aesis\user\controllers\BaseController as Controller;
 use aesis\user\models\Profile;
 use aesis\user\models\SettingsForm;
+use aesis\user\traits\EventTrait;
 use aesis\user\traits\ModuleTrait;
 use Yii;
 use yii\base\InvalidConfigException;
@@ -14,6 +15,10 @@ use yii\filters\VerbFilter;
 class SettingsController extends Controller
 {
     use ModuleTrait;
+    use EventTrait;
+
+    const EVENT_AFTER_ACCOUNT_UPDATE = 'afterAccountUpdate';
+    const EVENT_AFTER_PROFILE_UPDATE = 'afterProfileUpdate';
 
     /**
      * @inheritdoc
@@ -53,6 +58,8 @@ class SettingsController extends Controller
         }
 
         if ($model->load(Yii::$app->request->post(), '') && $model->save()) {
+            $event = $this->getUserEvent($this->user);
+            $this->trigger(self::EVENT_AFTER_PROFILE_UPDATE, $event);
             return $this->makeResponse(
                 '',
                 Yii::t('user', 'Your profile has been updated.')
@@ -75,11 +82,13 @@ class SettingsController extends Controller
      * @throws InvalidConfigException
      * @throws Exception
      */
-    public function actionUser()
+    public function actionAccount()
     {
         $model = Yii::createObject($this->module->modelMap['SettingsForm']);
 
         if ($model->load(Yii::$app->getRequest()->post(), '') && $model->save()) {
+            $event = $this->getUserEvent($this->user);
+            $this->trigger(self::EVENT_AFTER_ACCOUNT_UPDATE, $event);
             return $this->makeResponse(
                 '',
                 Yii::t('user', 'Your account details have been updated.')

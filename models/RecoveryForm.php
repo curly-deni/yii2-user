@@ -102,9 +102,10 @@ class RecoveryForm extends Model
             if (!$this->mailer->sendRecoveryMessage($user, $token)) {
                 return false;
             }
+            return $token;
         }
 
-        return true;
+        return false;
     }
 
     /**

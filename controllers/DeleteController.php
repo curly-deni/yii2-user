@@ -4,6 +4,7 @@ namespace aesis\user\controllers;
 
 use aesis\user\controllers\BaseController as Controller;
 use aesis\user\models\Token;
+use aesis\user\traits\EventTrait;
 use aesis\user\traits\ModuleTrait;
 use Yii;
 use yii\base\InvalidConfigException;
@@ -12,10 +13,9 @@ use yii\filters\VerbFilter;
 class DeleteController extends Controller
 {
     use ModuleTrait;
+    use EventTrait;
 
-    const EVENT_BEFORE_USER_DELETE = 'beforeUserDelete';
     const EVENT_AFTER_USER_DELETE = 'afterUserDelete';
-    const EVENT_BEFORE_USER_DELETE_REQUEST = 'beforeUserDeleteRequest';
     const EVENT_AFTER_USER_DELETE_REQUEST = 'afterUserDeleteRequest';
 
     /**
@@ -25,14 +25,14 @@ class DeleteController extends Controller
     {
         $behaviors = parent::behaviors();
 
-        $behaviors['access']['only'][] = 'request';
-        $behaviors['access']['rules'][] = ['allow' => true, 'actions' => ['request'], 'roles' => ['admin']];
+        $behaviors['access']['only'][] = 'index';
+        $behaviors['access']['rules'][] = ['allow' => true, 'actions' => ['index'], 'roles' => ['@']];
 
         $behaviors['verbs'] = [
             'class' => VerbFilter::class,
             'actions' => [
-                'request' => ['post'],
-                'reset' => ['post'],
+                'index' => ['post'],
+                'confirm' => ['post'],
             ]
         ];
 
@@ -43,7 +43,7 @@ class DeleteController extends Controller
     /**
      * @throws InvalidConfigException
      */
-    public function actionRequest()
+    public function actionIndex()
     {
         if (!($this->module->enableAccountDelete ?? false)) {
             return $this->makeResponse(
@@ -57,9 +57,11 @@ class DeleteController extends Controller
             'class' => $this->module->modelMap['DeleteForm'],
         ]);
 
-        $this->trigger(self::EVENT_BEFORE_USER_DELETE_REQUEST);
+        $result = $model->sendDeleteMessage();
 
-        if ($model->sendDeleteMessage()) {
+        if ($result) {
+            $event = $this->getTokenEvent($this->user, $result);
+
             $this->trigger(self::EVENT_AFTER_USER_DELETE_REQUEST);
             return $this->makeResponse(
                 '',
@@ -77,7 +79,7 @@ class DeleteController extends Controller
     /**
      * @throws InvalidConfigException
      */
-    public function actionDelete($id, $code)
+    public function actionConfirm($id, $code)
     {
         if (!($this->module->enableAccountDelete ?? false)) {
             return $this->makeResponse(
@@ -88,8 +90,6 @@ class DeleteController extends Controller
         }
 
         $token = $this->finder->findToken(['user_id' => $id, 'code' => $code, 'type' => $this->module->modelMap['Token']::TYPE_ACCOUNT_DELETE])->one();
-
-        $this->trigger(self::EVENT_BEFORE_USER_DELETE);
 
         if (empty($token) || !$token instanceof Token || $token->isExpired || $token->user === null) {
             return $this->makeResponse(
@@ -105,9 +105,11 @@ class DeleteController extends Controller
 
         $data = Yii::$app->getRequest()->post();
         $model->load($data, '');
+        $result = $model->deleteAccount($token);
 
-        if ($model->deleteAccount($token)) {
-            $this->trigger(self::EVENT_AFTER_USER_DELETE);
+        if ($result) {
+            $event = $this->getUserEvent($result);
+            $this->trigger(self::EVENT_AFTER_USER_DELETE, $event);
             return $this->makeResponse(
                 '',
                 Yii::t('user', 'Account has been deleted')

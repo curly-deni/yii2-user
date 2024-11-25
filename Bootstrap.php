@@ -30,7 +30,11 @@ class Bootstrap implements BootstrapInterface
         'LoginForm' => 'aesis\user\models\LoginForm',
         'SettingsForm' => 'aesis\user\models\SettingsForm',
         'RecoveryForm' => 'aesis\user\models\RecoveryForm',
-        'DeleteForm' => 'aesis\user\models\DeleteForm'
+        'DeleteForm' => 'aesis\user\models\DeleteForm',
+        'ApiKeyResource' => 'aesis\user\models\resource\ApiKey',
+        'AuthKeyResource' => 'aesis\user\models\resource\AuthKey',
+        'UserResource' => 'aesis\user\models\resource\User',
+        'ProfileResource' => 'aesis\user\models\resource\Profile',
     ];
 
     /**
@@ -85,7 +89,7 @@ class Bootstrap implements BootstrapInterface
 
                 Yii::$container->set('yii\web\User',
                     [
-                        'class' => 'aesis\user\helpers\User',
+                        'class' => 'aesis\user\rewrite_yii\User',
                         'enableSession' => InternalChecker::isInternalApi(),
                         'enableAutoLogin' => true,
                         'loginUrl' => [$appUrlPrefix . $moduleUrlPrefix . '/signin'],
