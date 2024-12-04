@@ -3,7 +3,6 @@
 namespace aesis\user\models\resource;
 
 use aesis\user\traits\hasOwnerFind;
-use app\lib\MaskData;
 use aesis\rest\traits\hasScenarios;
 use Yii;
 use yii\helpers\ArrayHelper;
@@ -12,6 +11,14 @@ class ApiKey extends \aesis\user\models\ApiKey
 {
     use hasScenarios;
     use hasOwnerFind;
+
+    public static function getMaskString($value, $visibleLength = 4)
+    {
+        if (strlen($value) > $visibleLength) {
+            return str_repeat('*', strlen($value) - $visibleLength) . substr($value, -$visibleLength);
+        }
+        return $value;
+    }
 
     public function scenarios(): array
     {
@@ -23,7 +30,7 @@ class ApiKey extends \aesis\user\models\ApiKey
 
     public function getMaskedKey()
     {
-        return MaskData::getMaskString($this->key, 5);
+        return self::getMaskString($this->key, 5);
     }
 
     public function fields(): array
