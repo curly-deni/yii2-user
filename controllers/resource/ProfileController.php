@@ -52,7 +52,7 @@ class ProfileController extends ControllerCRUDAbstract
         if (empty($username)) {
             return $this->makeResponse(
                 '',
-                \Yii::t('error', 'Empty search query parameter'),
+                \Yii::t('user', 'Empty search query parameter'),
                 400
             );
         }

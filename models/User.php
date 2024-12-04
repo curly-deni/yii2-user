@@ -7,6 +7,7 @@ use aesis\user\Finder;
 use aesis\user\helpers\Password;
 use aesis\user\Mailer;
 use aesis\user\Module;
+use aesis\user\traits\EventTrait;
 use aesis\user\traits\ModuleTrait;
 use Exception;
 use RuntimeException;
@@ -43,6 +44,7 @@ use yii\web\IdentityInterface;
 class User extends ActiveRecord implements IdentityInterface
 {
     use ModuleTrait;
+    use EventTrait;
 
     const BEFORE_CREATE = 'beforeCreate';
     const AFTER_CREATE = 'afterCreate';
@@ -246,10 +248,11 @@ class User extends ActiveRecord implements IdentityInterface
                 return false;
             }
 
+            $event = $this->getUserEvent($this);
+            $this->trigger(self::AFTER_CREATE, $event);
+
             $this->confirm();
             $this->mailer->sendWelcomeMessage($this, null, true);
-
-            $this->trigger(self::AFTER_CREATE);
 
             $transaction->commit();
 
@@ -275,7 +278,7 @@ class User extends ActiveRecord implements IdentityInterface
 
         try {
             $this->confirmed_at = $this->module->enableConfirmation ? null : time();
-            $this->password = $this->module->enableGeneratingPassword ? Password::generate(8) : $this->password;
+            $this->password = $this->password ?? Password::generate(8);
 
             $this->trigger(self::BEFORE_REGISTER);
 
@@ -289,10 +292,10 @@ class User extends ActiveRecord implements IdentityInterface
                 $token = Yii::createObject(['class' => $this->module->modelMap['Token'], 'type' => $this->module->modelMap['Token']::TYPE_CONFIRMATION]);
                 $token->link('user', $this);
             }
-
+            $event = $this->getUserEvent($this);
             $this->mailer->sendWelcomeMessage($this, $token ?? null);
 
-            $this->trigger(self::AFTER_REGISTER);
+            $this->trigger(self::AFTER_REGISTER, $event);
 
             $transaction->commit();
 

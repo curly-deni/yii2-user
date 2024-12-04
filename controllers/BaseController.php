@@ -10,7 +10,6 @@ abstract class BaseController extends Controller
 {
 
     use ApiTrait;
-
     public $allRoutesNeedAuth = false;
 
     protected $finder;

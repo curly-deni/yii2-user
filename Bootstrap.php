@@ -15,6 +15,7 @@ use yii\console\Application as ConsoleApplication;
 use yii\db\ActiveRecord;
 use yii\di\NotInstantiableException;
 use yii\i18n\PhpMessageSource;
+use yii\web\GroupUrlRule;
 
 
 class Bootstrap implements BootstrapInterface
@@ -100,16 +101,12 @@ class Bootstrap implements BootstrapInterface
                 $configUrlRule = [
                     'prefix' => $moduleUrlPrefix,
                     'rules' => $module->urlRules,
+                    'routePrefix' => $moduleUrlPrefix != 'user' ? 'user' : null
                 ];
 
-                if ($module->urlPrefix != 'user') {
-                    $configUrlRule['routePrefix'] = 'user';
-                }
+                $rule = new GroupUrlRule($configUrlRule);
 
-                $configUrlRule['class'] = 'yii\web\GroupUrlRule';
-                $rule = Yii::createObject($configUrlRule);
-
-                $app->urlManager->addRules($rule->rules, false);
+                $app->urlManager->addRules([$rule], false);
             }
 
             if (!isset($app->get('i18n')->translations['user*'])) {

@@ -163,12 +163,17 @@ class AuthKey extends ActiveRecord
      */
     public static function validateKey($user_id, $key, $ignoreDeviceInfo=false)
     {
+
+        Yii::debug('check login');
+        Yii::debug($user_id);
+        Yii::debug($key);
+
         $query = [
             'user_id' => intval($user_id),
             'key' => $key,
         ];
 
-        if (self::getModuleStatic()->useLocation) {
+        if (self::getModuleStatic()->useLocation && !$ignoreDeviceInfo) {
             $query['location'] = Location::getLocation();
         }
 

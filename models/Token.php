@@ -42,7 +42,7 @@ class Token extends ActiveRecord
         $appPrefix = \Yii::$app->params['urlPrefix'] ?? "/";
 
         $route = match ($this->type) {
-            self::TYPE_CONFIRMATION => $appPrefix . $prefix . '/user-confirm',
+            self::TYPE_CONFIRMATION => $appPrefix . $prefix . '/confirm',
             self::TYPE_RECOVERY => $appPrefix . $prefix . '/recover',
             self::TYPE_ACCOUNT_DELETE => $appPrefix . $prefix . '/delete-account',
             self::TYPE_CONFIRM_NEW_EMAIL, self::TYPE_CONFIRM_OLD_EMAIL => $appPrefix . $prefix . '/email-confirm',

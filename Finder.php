@@ -71,11 +71,6 @@ class Finder extends BaseObject
         return $this->userQuery->where($condition);
     }
 
-    public function findAccountById($id)
-    {
-        return $this->accountQuery->where(['id' => $id])->one();
-    }
-
     public function findToken($condition)
     {
         return $this->tokenQuery->where($condition);
@@ -92,7 +87,7 @@ class Finder extends BaseObject
 
     public function findProfileById($id)
     {
-        return $this->findProfile(['user_id' => $id])->one();
+        return $this->findProfile(['id' => $id])->one();
     }
 
     public function findProfile($condition)

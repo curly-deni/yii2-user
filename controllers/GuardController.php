@@ -47,11 +47,15 @@ class GuardController extends BaseController
     {
 
         /** @var LoginForm $model */
+        $model = Yii::createObject([
+            'class' => $this->getModule()->modelMap['LoginForm'],
+            'login' => $login,
+            'password' => $password,
+            'rememberMe' => $rememberMe
+        ]);
 
-        $model->login = $login;
-        $model->password = $password;
-        $model->rememberMe = $rememberMe;
         if ($model->login()) {
+
             $event = $this->getUserEvent(Yii::$app->user->identity);
             $this->trigger(self::EVENT_AFTER_SIGNIN, $event);
 

@@ -40,12 +40,12 @@ class UserController extends ControllerCRUDAbstract
         $user_id = Yii::$app->getRequest()->get('id');
 
         if (empty($user_id)) {
-            throw new ForbiddenHttpException(\Yii::t('error', 'Missing user id'));
+            throw new ForbiddenHttpException(\Yii::t('user', 'Missing user id'));
         }
 
         $user = User::findOne(intval($user_id));
         if (empty($user)) {
-            throw new ForbiddenHttpException(\Yii::t('error', 'User not found'));
+            throw new ForbiddenHttpException(\Yii::t('user', 'User not found'));
         }
 
         $keys = $user->authKeys;

@@ -3,6 +3,7 @@
 namespace aesis\user\traits;
 
 use aesis\user\events\KeyEvent;
+use aesis\user\events\TokenEvent;
 use aesis\user\events\UserEvent;
 
 trait EventTrait
@@ -20,6 +21,6 @@ trait EventTrait
 
     public function getTokenEvent($user, $token)
     {
-        return \Yii::createObject(['class' => KeyEvent::class, 'user' => $user, 'token' => $token]);
+        return \Yii::createObject(['class' => TokenEvent::class, 'user' => $user, 'token' => $token]);
     }
 }

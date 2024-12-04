@@ -80,21 +80,33 @@ class Module extends BaseModule
 
     /** @var array The rules to be used in URL management. */
     public array $urlRules = [
-        '<action:(signin|signout)>' => 'guard/<action>',
-        'signup/<action:(check-username|check-email|is-enabled|index)>' => 'registration/<action>',
-        'edit/<action:(index|confirm)>' => 'settings/<action>',
-        'delete/<action:(index|confirm)>' => 'delete/<action>',
-        'forgot/password/<action:(index|enter)>' => 'recovery/<action>',
-        'confirm/<action:(index|status|email|resend)>' => 'confirmation/<action>',
+        "<action:(signin|signout)>" => "guard/<action>",
+
+        'signup' => 'registration/index',
+        "signup/<action:(check-username|check-email|is-enabled)>" => "registration/<action>",
+
+        'edit' => 'settings/account',
+        "edit/profile" => "settings/profile",
+
+        'delete' => 'delete/index',
+        "delete/<action:(confirm)>" => "delete/<action>",
+
+        'forgot/password' => 'recovery/request',
+        "forgot/password/<action:(reset)>" => "recovery/<action>",
+
+        'confirm' => 'confirmation/index',
+        "confirm/<action:(status|email|resend)>" => "confirmation/<action>",
 
         // Узкие правила выше
-        '<action:(index|me|verify-password|get-last-activity-time)' => 'resource/user/<action>',
-        'index/<id:\d+>' => 'resource/user/<action>',
+        "<action:(me|verify-password|get-last-activity-time)>" => "resource/user/<action>",
+        '' => 'resource/user/index',
+        "<id:\d+>" => "resource/user/index",
 
         // Правила для controller/action идут ниже
-        '<controller:[\w\-]+>' => 'resource/<controller>/index',
-        '<controller:[\w\-]+>/<action:[\w\-]+>' => 'resource/<controller>/<action>',
-        '<controller:[\w\-]+>/<action:[\w\-]+>/<id:\d+>' => 'resource/<controller>/<action>',
+        "<controller:[\w\-]+>" => "resource/<controller>/index",
+        "<controller:[\w\-]+>/<id:\d+>" => "resource/<controller>/index",
+        "<controller:[\w\-]+>/<action:[\w\-]+>" => "resource/<controller>/<action>",
+        "<controller:[\w\-]+>/<action:[\w\-]+>/<id:\d+>" => "resource/<controller>/<action>",
     ];
 
 
@@ -112,7 +124,8 @@ class Module extends BaseModule
             $aesisId = $cookies->getValue('aesis_id', null);
 
             // Проверяем актуальность aesis_id
-            if (!$aesisId || !$this->isAesisIdInvalid($aesisId)) {
+            if (!$aesisId || $this->isAesisIdInvalid($aesisId)) {
+                \Yii::debug('aesis id is invalid, set new');
                 // Генерируем новое значение aesis_id
                 $newAesisId = $this->generateNewAesisId();
 
@@ -120,7 +133,6 @@ class Module extends BaseModule
                 $responseCookies->add(new Cookie([
                     'name' => 'aesis_id',
                     'value' => $newAesisId,
-                    'httpOnly' => true,
                 ]));
             }
         });
@@ -134,7 +146,6 @@ class Module extends BaseModule
      */
     private function isAesisIdInvalid($aesisId)
     {
-        \Yii::debug('here1');
 
         if ($aesisId === 'unauthenticated') {
             return \Yii::$app->getUser()->isGuest;
@@ -142,7 +153,7 @@ class Module extends BaseModule
 
         $values = json_decode($aesisId, true);
         if (\Yii::$app->getUser()->isGuest) {
-            return false;
+            return true;
         }
 
         $identity = \Yii::$app->getUser()->getIdentity();
@@ -156,7 +167,7 @@ class Module extends BaseModule
             'profile' => $identity->profile->toArray()
         ];
 
-        return count(array_udiff_assoc($values, $data, function ($a, $b) { return is_array($a) ? array_diff($a, $b) : strcmp($a, $b); })) !== 0;
+        return count(array_udiff($values, $data, function ($a, $b) { return is_array($a) ? array_diff($a, $b) : strcmp($a, $b); })) > 0;
     }
 
     /**

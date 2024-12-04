@@ -52,7 +52,7 @@ class AuthKeyController extends ControllerCRUDAbstract
             $result = $this->makeResponse('', '', $this->modelClass::deleteAll() ? 200 : 500);
         }
 
-        if ($result['success']) {
+        if ($result['status']) {
             $event = $this->getKeyEvent($this->user, 'all');
             $this->trigger(self::EVENT_AFTER_AUTH_KEY_DELETE_ALL, $event);
         }
@@ -65,7 +65,7 @@ class AuthKeyController extends ControllerCRUDAbstract
         $key = $this->modelClass::findOne($id);
         $result = parent::RESTdelete($id);
 
-        if ($result['success']) {
+        if ($result['status']) {
             $event = $this->getKeyEvent($this->user, $key);
             $this->trigger(self::EVENT_AFTER_AUTH_KEY_DELETE, $event);
         }

@@ -4,6 +4,7 @@ namespace aesis\user\models;
 
 use aesis\user\Finder;
 use aesis\user\Mailer;
+use aesis\user\traits\ModuleTrait;
 use Throwable;
 use Yii;
 use yii\base\InvalidConfigException;
@@ -13,6 +14,8 @@ use yii\db\StaleObjectException;
 
 class RecoveryForm extends Model
 {
+    use ModuleTrait;
+
     const SCENARIO_REQUEST = 'request';
     const SCENARIO_RESET = 'reset';
 

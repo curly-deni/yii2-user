@@ -4,6 +4,7 @@ namespace aesis\user\models;
 
 use aesis\user\Finder;
 use aesis\user\Mailer;
+use aesis\user\traits\ModuleTrait;
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\base\Model;
@@ -11,6 +12,8 @@ use yii\db\Exception;
 
 class ResendForm extends Model
 {
+    use ModuleTrait;
+
     public $email;
 
     protected $mailer;

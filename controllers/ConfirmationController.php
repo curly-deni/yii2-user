@@ -3,7 +3,6 @@
 namespace aesis\user\controllers;
 
 use aesis\user\controllers\BaseController as Controller;
-use aesis\user\models\ResendForm;
 use aesis\user\models\User;
 use aesis\user\Module;
 use aesis\user\traits\EventTrait;
@@ -29,6 +28,10 @@ class ConfirmationController extends Controller
     {
 
         $behaviors = parent::behaviors();
+
+        $behaviors['access']['only'] = ['index', 'email', 'resend', 'status'];
+        $behaviors['access']['rules'][] = ['allow' => true, 'actions' => ['index', 'email', 'resend', 'status'], 'roles' => ['?']];
+        $behaviors['access']['rules'][] = ['allow' => true, 'actions' => ['index', 'email', 'resend', 'status'], 'roles' => ['@']];
 
         $behaviors['verbs'] = [
             'class' => VerbFilter::class,

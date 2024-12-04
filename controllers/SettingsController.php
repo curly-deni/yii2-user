@@ -37,7 +37,7 @@ class SettingsController extends Controller
             'class' => VerbFilter::class,
             'actions' => [
                 'profile' => ['post'],
-                'user' => ['post'],
+                'account' => ['post'],
             ],
         ];
 
