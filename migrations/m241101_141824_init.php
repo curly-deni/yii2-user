@@ -89,9 +89,6 @@ class m241101_141824_init extends Migration
         // Unique index to enforce one-to-one relationship
         $this->createIndex('idx_profile_user_id_unique', '{{%profile}}', 'user_id', true);
 
-        // Индекс для таблицы Profile
-        $this->createIndex('idx_profile_nickname_unique', '{{%profile}}', 'nickname', true);
-
         // Таблица Token
         $this->createTable('{{%token}}', [
             'id' => $this->bigPrimaryKey()->unsigned(),
