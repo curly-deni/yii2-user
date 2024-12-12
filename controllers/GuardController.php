@@ -48,7 +48,7 @@ class GuardController extends BaseController
 
         /** @var LoginForm $model */
         $model = Yii::createObject([
-            'class' => $this->module->modelMap['LoginForm'],
+            'class' => $this->getModule()->modelMap['LoginForm'],
             'login' => $login,
             'password' => $password,
             'rememberMe' => $rememberMe
