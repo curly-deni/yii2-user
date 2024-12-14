@@ -78,6 +78,10 @@ class Module extends BaseModule
 
     public string $locationDatabase = '/app/lib/location_db.bin';
 
+    public bool $useFrontendConfirmPage = false;
+
+    public string $frontendConfirmPage = '/auth/confirm';
+
     /** @var array The rules to be used in URL management. */
     public array $urlRules = [
         "<action:(signin|signout)>" => "guard/<action>",
