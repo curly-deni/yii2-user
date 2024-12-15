@@ -10,15 +10,16 @@ trait ProfileFind
      * @param string $searchQuery Строка поиска.
      * @return \yii\db\ActiveQuery ActiveQuery, который можно продолжать для получения результатов.
      */
-    public static function search($searchQuery)
+    public static function search($searchQuery, $query = null)
     {
-        // Если строка поиска пустая, возвращаем все профили
-        if (empty($searchQuery)) {
-            return self::find();
+        if ($query === null) {
+            $query = self::find();
         }
 
-        // Инициализируем запрос для профилей
-        $query = self::find();
+        // Если строка поиска пустая, возвращаем все профили
+        if (empty($searchQuery)) {
+            return $query;
+        }
 
         // Приводим строку поиска к нижнему регистру
         $searchQuery = strtolower($searchQuery);
